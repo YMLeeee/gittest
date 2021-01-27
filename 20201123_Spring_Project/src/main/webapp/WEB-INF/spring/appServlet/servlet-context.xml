@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+
+<!-- applicationContext.xml에서 transactionManager를 Annotation방법으로 동작시키기 위해
+     반드시 vc와 관련된 init-param에 선언을 해야 작동됨 -->
+<tx:annotation-driven transaction-manager="transactionManager"/>
+
+<!-- Spring MVC 구조에서 @Controller를 찾아 줌
+     <context:component-scan>을 사용하면 자동으로 등록이 되기 때문에 사용하지 않아도 됨
+ -->
+<mvc:annotation-driven/>
+<!-- org.springframework.stereotype Bean 등록해 줌 base-package의 모든 
+	stereotype하고 annotation을 등록 해줌
+-->
+<context:component-scan base-package="com.min.edu"/>
+
+<!-- spring에서는 HTTP로 호출을 할때 요청 서버사이드의 파일 위치 img js css -->
+<!-- <mvc:resources location="/images/**" mapping="/images/"/> -->
+
+<!-- 사용하기 위한 bean -->
+<bean id="jsonHttpMessageConverter" class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter"></bean>
+
+<!-- ref걸어줘야함 -->
+<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+	<property name="messageConverters">
+		<list>
+			<ref bean="jsonHttpMessageConverter"/>
+		</list>
+	</property>
+</bean>
+
+<!-- resolver는 DispatcherServlet에 의해 반환된 String값을 처리 해줌
+     파일의 위치를 지정 할때 사용, // Rest와 는 반드시 구분해서 사용
+     @Repository 혹은 @RestContoller(4.0) 이런 방식일 때 구분해 주의 해서 사용
+ -->
+<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+	<property name="prefix" value="/WEB-INF/views/"/>
+	<property name="suffix" value=".jsp"/>
+</bean>
+
+<!-- IOC에서 호출되는 mapping을 제어하기 위함 -->
+<mvc:interceptors>
+	<mvc:interceptor>
+		<!-- 인터셉터가 제외될 URL -->
+		<mvc:mapping path="/boardList.do"/>
+		<mvc:mapping path="/boardWriteForm.do"/>
+		<mvc:mapping path="/test.do"/>
+		<!-- 인터셉터가 제외될 URL -->
+		<mvc:exclude-mapping path="/init/*.do"/>
+			
+		<!-- interceptor가 동작 및 판단할 클래스를 bean으로 등록 -->
+		<bean class="com.min.edu.interceptor.Interceptor"></bean>	
+	</mvc:interceptor>
+	
+		<bean id="webContentInterceptor" class="org.springframework.web.servlet.mvc.WebContentInterceptor">
+			<property name="cacheSeconds" value="0"/>
+			<property name="useExpiresHeader" value="true"/>
+			<property name="useCacheControlHeader" value="true"/>
+			<property name="useCacheControlNoStore" value="true"/>
+			<property name="cacheMappings">
+				<props>
+					<prop key="/images/**">86400</prop>
+				</props>
+			</property>
+		</bean>
+</mvc:interceptors>
+
+</beans>
+
+
+
+
+
+
+

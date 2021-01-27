@@ -1,0 +1,74 @@
+@charset "UTF-8";
+.usm-join-box {
+    height: 120px;
+    margin-top: 3px;
+    margin-bottom: 30px;
+    padding: 10px;
+    border: 1px solid #E1E1E3;
+    overflow-y: scroll;
+    background-color: #fff;
+}
+
+#container{
+	position: relative;
+	top: 100px;
+	width: 900px;
+	margin: 0px auto;
+}
+
+#title{
+	position: relative;
+	text-align: center;
+}
+
+#info{
+	position: relative;
+	margin-top: 10px;
+	width: 850px;
+	height: 250px;
+}
+
+#leftInfo{
+	float: left;
+	width: 200px;
+	height: 150px;
+	margin-left: 20px;
+	margin-right: 50px;
+	margin-top: 10px;
+	font-size: 40px;
+	font-weight: bold;
+}
+
+#centerInfo{
+	width: 800px;
+}
+
+#name{
+	margin-top: 30px;
+}
+
+#name, #id, #password, #passOk{
+	margin-top: 10px;
+	width: 400px;
+	height: 20px;
+}
+
+#bottomInfo{
+	width: 900px;
+	position: relative;
+	color: gray;
+	font-size: 10px;
+	
+}
+
+#button{
+	margin-top: 40px;
+	position: relative;
+	text-align: center;
+}
+
+
+
+
+
+

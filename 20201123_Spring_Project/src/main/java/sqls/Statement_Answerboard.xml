@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.min.edu.model.Answerboard_IDao">
+
+	<sql id="selBoard">
+		SELECT SEQ, ID, TITLE, CONTENT, REFER, STEP,"DEPTH", READCOUNT, DELFLAG,
+		REGDATE
+		FROM ANSWERBOARD a
+	</sql>
+
+<!-- AnswerboardDto [seq id title content ...] -->
+	<insert id="writeBoard" parameterType="AnswerboardDto">
+		<selectKey keyProperty="seq" resultType="java.lang.String" order="BEFORE">
+			SELECT ANSWERBOARD_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		
+		INSERT INTO ANSWERBOARD
+		(SEQ, ID, TITLE,
+		CONTENT, REFER, STEP,
+		"DEPTH", READCOUNT, DELFLAG,
+		REGDATE)
+		VALUES(#{seq}, #{id}, #{title},
+		#{content}, (SELECT NVL(MAX(REFER),0)+1 FROM ANSWERBOARD a), 0,
+		0, 0, 'N',
+		SYSDATE)
+		
+		
+	</insert>
+
+	<update id="replyBoardUp" parameterType="AnswerboardDto">
+		UPDATE ANSWERBOARD SET STEP = STEP +1
+		WHERE STEP > (SELECT STEP FROM ANSWERBOARD a WHERE SEQ = #{seq})
+		AND REFER = (SELECT REFER FROM ANSWERBOARD a2 WHERE SEQ=#{seq})
+	</update>
+
+	<insert id="replyBoardIn" parameterType="AnswerboardDto">
+		INSERT INTO ANSWERBOARD
+		(SEQ, ID, TITLE,
+		CONTENT,
+		REFER,
+		STEP,
+		"DEPTH",
+		READCOUNT, DELFLAG,
+		REGDATE)
+		VALUES
+		(
+		ANSWERBOARD_SEQ.NEXTVAL, #{id}, #{title},
+		#{content},
+		(SELECT REFER FROM ANSWERBOARD a WHERE SEQ=#{seq}),
+		(SELECT STEP FROM ANSWERBOARD a2 WHERE SEQ=#{seq})+1,
+		(SELECT "DEPTH" FROM ANSWERBOARD a3 WHERE SEQ=#{seq})+1,
+		0, 'N',
+		SYSDATE
+		)
+	</insert>
+
+	<select id="getOneBoard" parameterType="java.lang.String"
+		resultType="AnswerboardDto">
+		SELECT SEQ, ID, TITLE, CONTENT, READCOUNT, DELFLAG, REGDATE
+		FROM ANSWERBOARD a
+		WHERE SEQ =#{seq}
+	</select>
+
+	<update id="readCountBoard" parameterType="java.lang.String">
+		UPDATE ANSWERBOARD SET READCOUNT = READCOUNT +1
+		WHERE SEQ =#{seq}
+	</update>
+
+	<update id="modifyBoard" parameterType="AnswerboardDto">
+		UPDATE ANSWERBOARD
+		SET TITLE =#{title}, CONTENT =#{content}
+		WHERE SEQ =#{seq}
+	</update>
+
+	<update id="modifyBoard2" parameterType="AnswerboardDto">
+		UPDATE ANSWERBOARD
+		<if test="id == refer or step == 'ADMIN'">
+		SET TITLE =#{title}, CONTENT =#{content}
+		WHERE SEQ =#{seq}
+		</if>
+	</update>
+
+<!-- foreach 반복의 값을 만들어 줄때 사용함 JCF 
+	 Map : collection mapkey를 넣어줘야함
+	 List : collection list
+-->
+	<update id="delflagBoard" parameterType="java.util.Map">
+		UPDATE ANSWERBOARD SET DELFLAG ='Y'
+		WHERE DELFLAG ='N'
+		AND SEQ IN 
+		<foreach item="seq" collection="seqs" open="(" separator="," close=")">
+			#{seq}
+		</foreach>
+	</update>
+
+	<select id="deleteBoardSel" parameterType="java.lang.String"
+		resultType="AnswerboardDto">
+		<include refid="selBoard"/>
+		WHERE REFER = (SELECT REFER FROM ANSWERBOARD a2 WHERE SEQ=#{seq})
+		AND STEP >= (SELECT STEP FROM ANSWERBOARD a3 WHERE SEQ=#{seq})
+		AND "DEPTH" >= (SELECT "DEPTH" FROM ANSWERBOARD a4 WHERE SEQ=#{seq})
+		ORDER BY REFER DESC, STEP
+	</select>
+
+	<delete id="deleteBoard" parameterType="java.util.List">
+		DELETE FROM ANSWERBOARD a
+		WHERE SEQ IN
+		<foreach item="seq" collection="list" open="(" separator="," close=")">
+			#{seq}
+		</foreach>
+	</delete>
+
+	<select id="userBoardList" resultType="AnswerboardDto">
+		<include refid="selBoard"/>
+		WHERE DELFLAG ='N'
+		ORDER BY REFER DESC, STEP
+	</select>
+
+	<select id="adminBoardList" resultType="AnswerboardDto">
+		<include refid="selBoard"/>
+		ORDER BY REFER DESC, STEP
+	</select>
+
+	<select id="userBoardListRow" parameterType="RowNumDto"
+		resultType="AnswerboardDto">
+		SELECT SEQ, ID, TITLE, CONTENT, REFER, STEP,"DEPTH", READCOUNT, DELFLAG,
+		REGDATE
+		FROM(
+		SELECT ROWNUM RN , S1.*
+		FROM
+		(<include refid="selBoard"/>
+		WHERE DELFLAG ='N'
+		ORDER BY REFER DESC, STEP) S1
+		)
+		WHERE RN BETWEEN #{start} AND #{last}
+	</select>
+
+	<select id="adminBoardListRow" parameterType="RowNumDto"
+		resultType="AnswerboardDto">
+		SELECT SEQ, ID, TITLE, CONTENT, REFER, STEP,"DEPTH", READCOUNT, DELFLAG,
+		REGDATE
+		FROM(
+		SELECT ROW_NUMBER () OVER(ORDER BY REFER DESC , STEP) RN
+		,SEQ, ID, TITLE, CONTENT, REFER, STEP,"DEPTH", READCOUNT, DELFLAG, REGDATE
+		FROM ANSWERBOARD a
+		WHERE DELFLAG ='N')
+		WHERE RN BETWEEN #{start} AND #{last}
+	</select>
+
+	<select id="userBoardListTotal" resultType="java.lang.Integer">
+		SELECT COUNT(*)
+		FROM ANSWERBOARD a
+		WHERE DELFLAG ='N'
+	</select>
+
+	<select id="adminBoardListTotal" resultType="java.lang.Integer">
+		SELECT COUNT(*)
+		FROM ANSWERBOARD a
+	</select>
+
+</mapper>

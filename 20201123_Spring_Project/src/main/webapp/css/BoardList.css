@@ -1,0 +1,11 @@
+@charset "UTF-8";
+
+#select{
+	width: 100%;
+	text-align: right;
+	margin-bottom: 10px;
+}
+
+div.center{
+	text-align: center;
+}
