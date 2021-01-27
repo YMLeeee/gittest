@@ -236,7 +236,7 @@
 		      
 	</dependencies>
     <build>
-        <finalName>20201123_Spring_Project</finalName>
+        <finalName>SpringProject</finalName>
         <plugins>
         	<plugin>
         		<artifactId>maven-compiler-plugin</artifactId>
